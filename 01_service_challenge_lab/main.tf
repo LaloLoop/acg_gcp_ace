@@ -75,6 +75,7 @@ resource "random_string" "random" {
 resource "google_storage_bucket" "gce-logs" {
   name     = lower("${substr(var.dest-bucket-prefix, 0, 75)}-${random_string.random.result}")
   location = "US"
+  force_destroy = true
 }
 
 // Default service account
