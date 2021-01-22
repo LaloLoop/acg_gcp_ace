@@ -126,7 +126,7 @@ resource "google_compute_instance" "main" {
 
   labels = {
     "purpose" = "learning",
-    "course"  = "GCP-ACE"
+    "course"  = "gcp-ace"
   }
 
   metadata = {
