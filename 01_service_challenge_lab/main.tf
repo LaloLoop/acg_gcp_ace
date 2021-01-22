@@ -130,7 +130,7 @@ resource "google_compute_instance" "main" {
   }
 
   metadata = {
-    "lab-logs-bucket" = google_storage_bucket.gce-logs.name
+    "lab-logs-bucket" = "gs://${google_storage_bucket.gce-logs.name}"
   }
 
   metadata_startup_script = file("./scripts/startup.sh")
