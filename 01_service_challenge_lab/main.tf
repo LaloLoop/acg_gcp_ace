@@ -69,6 +69,7 @@ resource "google_project_service" "iam_api" {
 resource "random_string" "random" {
   length  = 8
   special = false
+  upper   = false
 }
 
 resource "google_storage_bucket" "gce-logs" {
