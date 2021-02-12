@@ -93,6 +93,8 @@ resource "google_compute_firewall" "icmp-backend-outgoing" {
 
     destination_ranges = [ "0.0.0.0/0" ]
 
+    direction = "EGRESS"
+
     source_service_accounts = [
         google_service_account.backend-sa.email
     ]
