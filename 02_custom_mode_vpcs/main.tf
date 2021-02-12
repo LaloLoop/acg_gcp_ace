@@ -171,11 +171,11 @@ resource "google_compute_region_instance_group_manager" "instance_group_manager"
     region = local.region
 
     version {
-        instance_template = google_compute_instance_template.instance_template["${each.key}"].id
+        instance_template = google_compute_instance_template.instance_template[each.key].id
         name = "primary"
     }
 
-    target_pools = [ google_compute_target_pool.target-pool["${each.key}"].id ]
+    target_pools = [ google_compute_target_pool.target-pool[each.key].id ]
     base_instance_name = each.key
 }
 
@@ -183,7 +183,7 @@ resource "google_compute_region_autoscaler" "region-autoscaler" {
     for_each = local.tiers
     name = "${each.key}-autoscaler"
     region = local.region
-    target = google_compute_region_instance_group_manager.instance_group_manager["${each.key}"].id
+    target = google_compute_region_instance_group_manager.instance_group_manager[each.key].id
 
     autoscaling_policy {
       max_replicas = 4
