@@ -18,6 +18,7 @@ terraform {
 
 locals {
     region = "us-central1"
+    ssh-tags = [ "open-ssh-tag" ]
     tiers = {
         "backend" = {
             "service_account" = google_service_account.backend-sa.email,
@@ -61,7 +62,7 @@ resource "google_compute_firewall" "ssh-firewall" {
 
     source_ranges = [ "0.0.0.0/0" ]
 
-    target_tags = [ "open-ssh-tag" ]
+    target_tags = local.ssh-tags
 }
 
 // -------- Frontend --------
@@ -156,6 +157,8 @@ resource "google_compute_instance_template" "instance_template" {
     disk {
       source_image = data.google_compute_image.debian_9.id
     }
+
+    tags = local.ssh-tags
 
     network_interface {
       network = google_compute_network.my-custom-net.name
