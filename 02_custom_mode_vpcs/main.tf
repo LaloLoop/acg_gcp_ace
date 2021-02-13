@@ -19,8 +19,14 @@ terraform {
 locals {
     region = "us-central1"
     tiers = {
-        "backend" = google_service_account.backend-sa.email,
-        "frontend" = google_service_account.frontend-sa.email
+        "backend" = {
+            "service_account" = google_service_account.backend-sa.email,
+            "external_ip" = false
+        },
+        "frontend" = {
+            "service_account" = google_service_account.frontend-sa.email
+            "external_ip" = true
+        }
     }
 }
 
@@ -154,10 +160,15 @@ resource "google_compute_instance_template" "instance_template" {
     network_interface {
       network = google_compute_network.my-custom-net.name
       subnetwork = google_compute_subnetwork.custom-subnet-0.name
+      
+      dynamic "access_config" {
+        for_each = each.value.external_ip ?  [ each.value.external_ip ] : []
+        content {}
+      }
     }
 
     service_account {
-        email = each.value
+        email = each.value.service_account
         scopes = []
     }
 }
