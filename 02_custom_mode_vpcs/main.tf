@@ -94,7 +94,7 @@ resource "google_compute_firewall" "icmp-frontend-incoming" {
 
 // Deny the outbound traffic from the backend
 resource "google_compute_firewall" "backend-deny-outgoing" {
-    name = "icmp-backend-outgoing"
+    name = "backend-deny-outgoing"
     network = google_compute_network.my-custom-net.name
 
     deny {
