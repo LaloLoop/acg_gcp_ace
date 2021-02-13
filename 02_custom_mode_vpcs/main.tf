@@ -22,11 +22,13 @@ locals {
     tiers = {
         "backend" = {
             "service_account" = google_service_account.backend-sa.email,
-            "external_ip" = false
+            "external_ip" = false,
+            "ip_cidr_range" = "10.0.1.0/24"
         },
         "frontend" = {
             "service_account" = google_service_account.frontend-sa.email
-            "external_ip" = true
+            "external_ip" = true,
+            "ip_cidr_range" = "10.0.2.0/24"
         }
     }
 }
@@ -40,10 +42,11 @@ resource "google_compute_network" "my-custom-net" {
 }
 
 // Subnetworks
-resource "google_compute_subnetwork" "custom-subnet-0" {
-    name = "custom-subnet"
-    ip_cidr_range = "10.2.0.0/16"
-    description = "Custom subnet for two-tier setup"
+resource "google_compute_subnetwork" "custom-subnet" {
+    for_each = local.tiers
+    name = "custom-subnet-${each.key}"
+    ip_cidr_range = each.value.ip_cidr_range
+    description = "Custom subnet for ${each.key} instances"
     region = local.region
     network = google_compute_network.my-custom-net.id
 }
@@ -90,7 +93,7 @@ resource "google_compute_firewall" "icmp-frontend-incoming" {
 // -------- Backend --------
 
 // Deny the outbound traffic from the backend
-resource "google_compute_firewall" "icmp-backend-outgoing" {
+resource "google_compute_firewall" "backend-deny-outgoing" {
     name = "icmp-backend-outgoing"
     network = google_compute_network.my-custom-net.name
 
@@ -99,6 +102,27 @@ resource "google_compute_firewall" "icmp-backend-outgoing" {
     }
 
     destination_ranges = [ "0.0.0.0/0" ]
+
+    direction = "EGRESS"
+
+    target_service_accounts = [
+        google_service_account.backend-sa.email
+    ]
+}
+
+resource "google_compute_firewall" "icmp-backend-outgoing" {
+    name = "icmp-backend-outgoing"
+    network = google_compute_network.my-custom-net.name
+
+    allow {
+        protocol = "icmp"
+    }
+
+    priority = 900
+
+    destination_ranges = [
+        local.tiers["backend"].ip_cidr_range
+    ]
 
     direction = "EGRESS"
 
@@ -162,7 +186,7 @@ resource "google_compute_instance_template" "instance_template" {
 
     network_interface {
       network = google_compute_network.my-custom-net.name
-      subnetwork = google_compute_subnetwork.custom-subnet-0.name
+      subnetwork = google_compute_subnetwork.custom-subnet[each.key].name
       
       dynamic "access_config" {
         for_each = each.value.external_ip ?  [ each.value.external_ip ] : []
